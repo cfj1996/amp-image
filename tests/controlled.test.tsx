@@ -19,7 +19,7 @@ describe('Controlled', () => {
       />,
     );
 
-    expect(wrapper.find('.rc-image-preview').get(0)).toBeTruthy();
+    expect(wrapper.find('.amp-image-preview').get(0)).toBeTruthy();
 
     act(() => {
       wrapper.setProps({ preview: { visible: false } });
@@ -27,11 +27,6 @@ describe('Controlled', () => {
       wrapper.update();
     });
 
-    expect(
-      wrapper
-        .find('.rc-image-preview')
-        .at(0)
-        .render(),
-    ).toMatchSnapshot();
+    expect(wrapper.find('.amp-image-preview').at(0).render()).toMatchSnapshot();
   });
 });

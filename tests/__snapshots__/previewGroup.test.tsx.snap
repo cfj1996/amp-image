@@ -2,7 +2,7 @@
 
 exports[`Preview With Controlled 1`] = `
 <div
-  class="rc-image-preview"
+  class="amp-image-preview"
   role="document"
 >
   <div
@@ -11,36 +11,36 @@ exports[`Preview With Controlled 1`] = `
     tabindex="0"
   />
   <div
-    class="rc-image-preview-content"
+    class="amp-image-preview-content"
   >
     <div
-      class="rc-image-preview-body"
+      class="amp-image-preview-body"
     >
       <ul
-        class="rc-image-preview-operations"
+        class="amp-image-preview-operations"
       >
         <li
-          class="rc-image-preview-operations-operation"
+          class="amp-image-preview-operations-operation"
         />
         <li
-          class="rc-image-preview-operations-operation"
+          class="amp-image-preview-operations-operation"
         />
         <li
-          class="rc-image-preview-operations-operation rc-image-preview-operations-operation-disabled"
+          class="amp-image-preview-operations-operation amp-image-preview-operations-operation-disabled"
         />
         <li
-          class="rc-image-preview-operations-operation"
+          class="amp-image-preview-operations-operation"
         />
         <li
-          class="rc-image-preview-operations-operation"
+          class="amp-image-preview-operations-operation"
         />
       </ul>
       <div
-        class="rc-image-preview-img-wrapper"
+        class="amp-image-preview-img-wrapper"
         style="transform: translate3d(0px, 0px, 0);"
       >
         <img
-          class="rc-image-preview-img"
+          class="amp-image-preview-img"
           src="src1"
           style="transform: scale3d(1, 1, 1) rotate(0deg);"
         />

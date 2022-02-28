@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Image from 'rc-image';
+import Image from 'amp-image';
 import '../../assets/index.less';
 
 export default function Thumbnail() {
@@ -8,7 +8,8 @@ export default function Thumbnail() {
       <Image
         src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png?x-oss-process=image/auto-orient,1/resize,p_10/quality,q_10"
         preview={{
-          src: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
+          src:
+            'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
         }}
         width={200}
       />
@@ -20,7 +21,8 @@ export default function Thumbnail() {
           key={1}
           src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png?x-oss-process=image/auto-orient,1/resize,p_10/quality,q_10"
           preview={{
-            src: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
+            src:
+              'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
           }}
           width={200}
         />

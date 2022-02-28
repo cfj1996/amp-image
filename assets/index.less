@@ -1,9 +1,17 @@
-@prefixCls: rc-image;
+@prefixCls: amp-image;
 @zindex-preview-mask: 1000;
 @preview-mask-bg: fade(#000, 100%);
 @text-color: #bbb;
 @text-color-disabled: darken(@text-color, 30%);
 @background-color: #f3f3f3;
+
+.descTitle {
+  position: absolute;
+  top: 10px;
+  z-index: 2;
+  color: red;
+  left: 45%;
+}
 
 .reset() {
   margin: 0;

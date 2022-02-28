@@ -14,11 +14,12 @@ describe('Placeholder', () => {
   });
 
   it('Default placeholder', () => {
-    const src = 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png';
+    const src =
+      'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png';
     const wrapper = mount(<Image src={src} placeholder />);
 
-    expect(wrapper.find('.rc-image-placeholder').get(0)).toBeFalsy();
-    expect(wrapper.find('.rc-image-img-placeholder').prop('src')).toBe(src);
+    expect(wrapper.find('.amp-image-placeholder').get(0)).toBeFalsy();
+    expect(wrapper.find('.amp-image-img-placeholder').prop('src')).toBe(src);
   });
 
   it('Set correct', () => {
@@ -29,15 +30,15 @@ describe('Placeholder', () => {
         placeholder={placeholder}
       />,
     );
-    expect(wrapper.find('.rc-image-placeholder').text()).toBe(placeholder);
+    expect(wrapper.find('.amp-image-placeholder').text()).toBe(placeholder);
 
     act(() => {
-      wrapper.find('.rc-image-img').simulate('load');
+      wrapper.find('.amp-image-img').simulate('load');
       jest.runAllTimers();
       wrapper.update();
     });
 
-    expect(wrapper.find('.rc-image-placeholder').get(0)).toBeUndefined();
+    expect(wrapper.find('.amp-image-placeholder').get(0)).toBeUndefined();
   });
 
   it('Hide placeholder when load from cache', () => {
@@ -60,7 +61,7 @@ describe('Placeholder', () => {
       />,
     );
 
-    expect(wrapper.find('.rc-image-placeholder').get(0)).toBeFalsy();
+    expect(wrapper.find('.amp-image-placeholder').get(0)).toBeFalsy();
 
     domSpy.mockRestore();
   });

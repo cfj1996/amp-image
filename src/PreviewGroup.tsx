@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useMergedState from 'rc-util/lib/hooks/useMergedState';
-import { ImagePreviewType } from './Image';
-import Preview, { PreviewProps } from './Preview';
+import type { ImagePreviewType } from './Image';
+import type { PreviewProps } from './Preview';
+import Preview from './Preview';
 
 export interface PreviewGroupPreview
   extends Omit<ImagePreviewType, 'icons' | 'mask' | 'maskClassName'> {
@@ -19,25 +20,35 @@ export interface GroupConsumerProps {
   preview?: boolean | PreviewGroupPreview;
 }
 
-interface PreviewUrl {
-  url: string;
+interface PreviewObj {
+  url?: string;
+  getPreviewUrl?: (params?: any) => Promise<string>;
+  params?: any;
+  loading?: boolean;
+  loadingComponent?: React.ReactNode;
+  onSuccess?: (previewUrl: string) => void;
+  onError?: (error: any, reload?: () => void) => void;
+  error?: any;
+  descComponent?: React.ReactNode;
   canPreview: boolean;
 }
 
 export interface GroupConsumerValue extends GroupConsumerProps {
   isPreviewGroup?: boolean;
-  previewUrls: Map<number, string>;
-  setPreviewUrls: React.Dispatch<React.SetStateAction<Map<number, PreviewUrl>>>;
+  previewObjs: Map<number, PreviewObj>;
+  setPreviewUrls: React.Dispatch<React.SetStateAction<Map<number, PreviewObj>>>;
   current: number;
   setCurrent: React.Dispatch<React.SetStateAction<number>>;
   setShowPreview: React.Dispatch<React.SetStateAction<boolean>>;
-  setMousePosition: React.Dispatch<React.SetStateAction<null | { x: number; y: number }>>;
-  registerImage: (id: number, url: string, canPreview?: boolean) => () => void;
+  setMousePosition: React.Dispatch<
+    React.SetStateAction<null | { x: number; y: number }>
+  >;
+  registerImage: (id: number, previewObj: PreviewObj) => () => void;
 }
 
 /* istanbul ignore next */
 export const context = React.createContext<GroupConsumerValue>({
-  previewUrls: new Map(),
+  previewObjs: new Map(),
   setPreviewUrls: () => null,
   current: null,
   setCurrent: () => null,
@@ -49,7 +60,7 @@ export const context = React.createContext<GroupConsumerValue>({
 const { Provider } = context;
 
 const Group: React.FC<GroupConsumerProps> = ({
-  previewPrefixCls = 'rc-image-preview',
+  previewPrefixCls = 'amp-image-preview',
   children,
   icons = {},
   preview,
@@ -61,35 +72,34 @@ const Group: React.FC<GroupConsumerProps> = ({
     current: currentIndex = 0,
     ...dialogProps
   } = typeof preview === 'object' ? preview : {};
-  const [previewUrls, setPreviewUrls] = useState<Map<number, PreviewUrl>>(new Map());
+  const [previewObjs, setPreviewObjs] = useState<Map<number, PreviewObj>>(
+    new Map(),
+  );
   const [current, setCurrent] = useState<number>();
   const [isShowPreview, setShowPreview] = useMergedState(!!previewVisible, {
     value: previewVisible,
     onChange: onPreviewVisibleChange,
   });
-  const [mousePosition, setMousePosition] = useState<null | { x: number; y: number }>(null);
+  const [mousePosition, setMousePosition] = useState<null | {
+    x: number;
+    y: number;
+  }>(null);
   const isControlled = previewVisible !== undefined;
-  const previewUrlsKeys = Array.from(previewUrls.keys());
+  const previewUrlsKeys = Array.from(previewObjs.keys());
   const currentControlledKey = previewUrlsKeys[currentIndex];
-  const canPreviewUrls = new Map<number, string>(
-    Array.from(previewUrls)
-      .filter(([, { canPreview }]) => !!canPreview)
-      .map(([id, { url }]) => [id, url]),
-  );
-
-  const registerImage = (id: number, url: string, canPreview: boolean = true) => {
+  const registerImage = (id: number, previewObj: PreviewObj) => {
     const unRegister = () => {
-      setPreviewUrls(oldPreviewUrls => {
+      setPreviewObjs(oldPreviewUrls => {
         const clonePreviewUrls = new Map(oldPreviewUrls);
         const deleteResult = clonePreviewUrls.delete(id);
         return deleteResult ? clonePreviewUrls : oldPreviewUrls;
       });
     };
 
-    setPreviewUrls(oldPreviewUrls => {
+    setPreviewObjs(oldPreviewUrls => {
       return new Map(oldPreviewUrls).set(id, {
-        url,
-        canPreview,
+        canPreview: true,
+        ...previewObj,
       });
     });
 
@@ -112,12 +122,55 @@ const Group: React.FC<GroupConsumerProps> = ({
     }
   }, [currentControlledKey, isControlled, isShowPreview]);
 
+  useEffect(() => {
+    const previewObj = previewObjs.get(current);
+    console.log('previewObj', current, previewObj);
+    if (
+      previewObj &&
+      !previewObj.url &&
+      !previewObj.loading &&
+      previewObj.getPreviewUrl
+    ) {
+      setPreviewObjs(oldPreviewUrls => {
+        return new Map(oldPreviewUrls).set(current, {
+          ...previewObj,
+          loading: true,
+        });
+      });
+      previewObj
+        .getPreviewUrl(previewObj.params)
+        .then(res => {
+          previewObj.onSuccess?.(res);
+          setPreviewObjs(oldPreviewUrls => {
+            return new Map(oldPreviewUrls).set(current, {
+              ...previewObj,
+              loading: false,
+              url: res,
+            });
+          });
+        })
+        .catch(err => {
+          setPreviewObjs(oldPreviewUrls => {
+            previewObj.onError?.(err, () =>
+              previewObj.getPreviewUrl(previewObj.params),
+            );
+            return new Map(oldPreviewUrls).set(current, {
+              ...previewObj,
+              loading: false,
+            });
+          });
+        });
+    }
+  }, [current]);
+  const { url, loading, descComponent, loadingComponent } =
+    previewObjs.get(current) || {};
+  console.log('Provider', current, url, loading);
   return (
     <Provider
       value={{
         isPreviewGroup: true,
-        previewUrls: canPreviewUrls,
-        setPreviewUrls,
+        previewObjs,
+        setPreviewUrls: setPreviewObjs,
         current,
         setCurrent,
         setShowPreview,
@@ -132,7 +185,10 @@ const Group: React.FC<GroupConsumerProps> = ({
         prefixCls={previewPrefixCls}
         onClose={onPreviewClose}
         mousePosition={mousePosition}
-        src={canPreviewUrls.get(current)}
+        src={url}
+        loading={loading}
+        loadingComponent={loadingComponent}
+        descComponent={descComponent}
         icons={icons}
         getContainer={getContainer}
         {...dialogProps}

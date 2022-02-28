@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Image from 'rc-image';
+import Image from 'amp-image';
 import '../../assets/index.less';
 
 export default function Base() {

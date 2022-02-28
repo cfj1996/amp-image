@@ -6,7 +6,7 @@ exports[`Basic snapshot 1`] = `
   width={200}
 >
   <div
-    className="rc-image"
+    className="amp-image"
     onClick={[Function]}
     style={
       Object {
@@ -16,7 +16,7 @@ exports[`Basic snapshot 1`] = `
     }
   >
     <img
-      className="rc-image-img"
+      className="amp-image-img"
       onError={[Function]}
       onLoad={[Function]}
       src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
@@ -31,7 +31,7 @@ exports[`Basic snapshot 1`] = `
     aria-hidden={true}
     mousePosition={null}
     onClose={[Function]}
-    prefixCls="rc-image-preview"
+    prefixCls="amp-image-preview"
     src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
     visible={false}
   >
@@ -43,7 +43,7 @@ exports[`Basic snapshot 1`] = `
       maskTransitionName="fade"
       mousePosition={null}
       onClose={[Function]}
-      prefixCls="rc-image-preview"
+      prefixCls="amp-image-preview"
       transitionName="zoom"
       visible={false}
       wrapClassName=""

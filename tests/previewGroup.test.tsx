@@ -21,15 +21,12 @@ describe('Preview', () => {
     );
 
     act(() => {
-      wrapper
-        .find('.rc-image')
-        .at(0)
-        .simulate('click');
+      wrapper.find('.amp-image').at(0).simulate('click');
       jest.runAllTimers();
       wrapper.update();
     });
 
-    expect(wrapper.find('.rc-image-preview').get(0)).toBeTruthy();
+    expect(wrapper.find('.amp-image-preview').get(0)).toBeTruthy();
 
     expect(() => {
       wrapper.unmount();
@@ -44,15 +41,12 @@ describe('Preview', () => {
     );
 
     act(() => {
-      wrapper
-        .find('.rc-image')
-        .at(0)
-        .simulate('click');
+      wrapper.find('.amp-image').at(0).simulate('click');
       jest.runAllTimers();
       wrapper.update();
     });
 
-    expect(wrapper.find('.rc-image-preview').get(0)).toBeFalsy();
+    expect(wrapper.find('.amp-image-preview').get(0)).toBeFalsy();
   });
 
   it('Switch', () => {
@@ -65,36 +59,43 @@ describe('Preview', () => {
     );
 
     act(() => {
+      wrapper.find('.amp-image').at(0).simulate('click');
+      jest.runAllTimers();
+      wrapper.update();
+    });
+
+    expect(
       wrapper
-        .find('.rc-image')
-        .at(0)
+        .find('.amp-image-preview .amp-image-preview-switch-left-disabled')
+        .get(0),
+    ).toBeTruthy();
+
+    act(() => {
+      wrapper
+        .find('.amp-image-preview .amp-image-preview-switch-right')
         .simulate('click');
       jest.runAllTimers();
       wrapper.update();
     });
 
     expect(
-      wrapper.find('.rc-image-preview .rc-image-preview-switch-left-disabled').get(0),
+      wrapper
+        .find('.amp-image-preview .amp-image-preview-switch-right-disabled')
+        .get(0),
     ).toBeTruthy();
 
     act(() => {
-      wrapper.find('.rc-image-preview .rc-image-preview-switch-right').simulate('click');
+      wrapper
+        .find('.amp-image-preview .amp-image-preview-switch-left')
+        .simulate('click');
       jest.runAllTimers();
       wrapper.update();
     });
 
     expect(
-      wrapper.find('.rc-image-preview .rc-image-preview-switch-right-disabled').get(0),
-    ).toBeTruthy();
-
-    act(() => {
-      wrapper.find('.rc-image-preview .rc-image-preview-switch-left').simulate('click');
-      jest.runAllTimers();
-      wrapper.update();
-    });
-
-    expect(
-      wrapper.find('.rc-image-preview .rc-image-preview-switch-left-disabled').get(0),
+      wrapper
+        .find('.amp-image-preview .amp-image-preview-switch-left-disabled')
+        .get(0),
     ).toBeTruthy();
   });
 
@@ -105,7 +106,7 @@ describe('Preview', () => {
       </Image.PreviewGroup>,
     );
 
-    expect(wrapper.find('.rc-image-preview').get(0)).toBeTruthy();
+    expect(wrapper.find('.amp-image-preview').get(0)).toBeTruthy();
 
     act(() => {
       wrapper.setProps({ preview: { visible: false } });
@@ -113,11 +114,6 @@ describe('Preview', () => {
       wrapper.update();
     });
 
-    expect(
-      wrapper
-        .find('.rc-image-preview')
-        .at(0)
-        .render(),
-    ).toMatchSnapshot();
+    expect(wrapper.find('.amp-image-preview').at(0).render()).toMatchSnapshot();
   });
 });

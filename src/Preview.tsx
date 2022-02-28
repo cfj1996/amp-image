@@ -1,5 +1,6 @@
 import * as React from 'react';
-import Dialog, { DialogProps as IDialogPropTypes } from 'rc-dialog';
+import type { DialogProps as IDialogPropTypes } from 'rc-dialog';
+import Dialog from 'rc-dialog';
 import classnames from 'classnames';
 import addEventListener from 'rc-util/lib/Dom/addEventListener';
 import { warning } from 'rc-util/lib/warning';
@@ -13,6 +14,9 @@ export interface PreviewProps extends Omit<IDialogPropTypes, 'onClose'> {
   onClose?: (e: React.SyntheticEvent<Element>) => void;
   src?: string;
   alt?: string;
+  descComponent?: React.ReactNode;
+  loading?: boolean;
+  loadingComponent?: React.ReactNode;
   icons?: {
     rotateLeft?: React.ReactNode;
     rotateRight?: React.ReactNode;
@@ -21,6 +25,7 @@ export interface PreviewProps extends Omit<IDialogPropTypes, 'onClose'> {
     close?: React.ReactNode;
     left?: React.ReactNode;
     right?: React.ReactNode;
+    desc?: React.ReactNode;
   };
 }
 
@@ -30,10 +35,24 @@ const initialPosition = {
 };
 
 const Preview: React.FC<PreviewProps> = props => {
-  const { prefixCls, src, alt, onClose, afterClose, visible, icons = {}, ...restProps } = props;
-  const { rotateLeft, rotateRight, zoomIn, zoomOut, close, left, right } = icons;
+  const {
+    prefixCls,
+    src,
+    alt,
+    onClose,
+    afterClose,
+    visible,
+    icons = {},
+    loading,
+    loadingComponent,
+    descComponent,
+    ...restProps
+  } = props;
+  const { rotateLeft, rotateRight, zoomIn, zoomOut, close, left, right, desc } =
+    icons;
   const [scale, setScale] = useState(1);
   const [rotate, setRotate] = useState(0);
+  const [shoDesc, setShowDesc] = useState(true);
   const [position, setPosition] = useFrameSetState<{
     x: number;
     y: number;
@@ -51,13 +70,15 @@ const Preview: React.FC<PreviewProps> = props => {
     deltaY: 0,
   });
   const [isMoving, setMoving] = React.useState(false);
-  const { previewUrls, current, isPreviewGroup, setCurrent } = React.useContext(context);
-  const previewGroupCount = previewUrls.size;
-  const previewUrlsKeys = Array.from(previewUrls.keys());
+  const { previewObjs, current, isPreviewGroup, setCurrent } =
+    React.useContext(context);
+  const previewGroupCount = previewObjs.size;
+  const previewUrlsKeys = Array.from(previewObjs.keys());
   const currentPreviewIndex = previewUrlsKeys.indexOf(current);
-  const combinationSrc = isPreviewGroup ? previewUrls.get(current) : src;
   const showLeftOrRightSwitches = isPreviewGroup && previewGroupCount > 1;
-  const [lastWheelZoomDirection, setLastWheelZoomDirection] = React.useState({ wheelDirection: 0 });
+  const [lastWheelZoomDirection, setLastWheelZoomDirection] = React.useState({
+    wheelDirection: 0,
+  });
 
   const onAfterClose = () => {
     setScale(1);
@@ -109,6 +130,11 @@ const Preview: React.FC<PreviewProps> = props => {
   const toolClassName = `${prefixCls}-operations-operation`;
   const iconClassName = `${prefixCls}-operations-icon`;
   const tools = [
+    {
+      icon: desc,
+      onClick: () => setShowDesc(!shoDesc),
+      type: 'desc',
+    },
     {
       icon: close,
       onClick: onClose,
@@ -202,22 +228,47 @@ const Preview: React.FC<PreviewProps> = props => {
     let onTopMouseUpListener;
     let onTopMouseMoveListener;
 
-    const onMouseUpListener = addEventListener(window, 'mouseup', onMouseUp, false);
-    const onMouseMoveListener = addEventListener(window, 'mousemove', onMouseMove, false);
-    const onScrollWheelListener = addEventListener(window, 'wheel', onWheelMove, {
-      passive: false,
-    });
+    const onMouseUpListener = addEventListener(
+      window,
+      'mouseup',
+      onMouseUp,
+      false,
+    );
+    const onMouseMoveListener = addEventListener(
+      window,
+      'mousemove',
+      onMouseMove,
+      false,
+    );
+    const onScrollWheelListener = addEventListener(
+      window,
+      'wheel',
+      onWheelMove,
+      {
+        passive: false,
+      },
+    );
 
     try {
       // Resolve if in iframe lost event
       /* istanbul ignore next */
       if (window.top !== window.self) {
-        onTopMouseUpListener = addEventListener(window.top, 'mouseup', onMouseUp, false);
-        onTopMouseMoveListener = addEventListener(window.top, 'mousemove', onMouseMove, false);
+        onTopMouseUpListener = addEventListener(
+          window.top,
+          'mouseup',
+          onMouseUp,
+          false,
+        );
+        onTopMouseMoveListener = addEventListener(
+          window.top,
+          'mousemove',
+          onMouseMove,
+          false,
+        );
       }
     } catch (error) {
       /* istanbul ignore next */
-      warning(false, `[rc-image] ${error}`);
+      warning(false, `[amp-image] ${error}`);
     }
 
     return () => {
@@ -266,16 +317,20 @@ const Preview: React.FC<PreviewProps> = props => {
           transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
         }}
       >
-        <img
-          onMouseDown={onMouseDown}
-          ref={imgRef}
-          className={`${prefixCls}-img`}
-          src={combinationSrc}
-          alt={alt}
-          style={{
-            transform: `scale3d(${scale}, ${scale}, 1) rotate(${rotate}deg)`,
-          }}
-        />
+        {loading ? (
+          loadingComponent
+        ) : (
+          <img
+            onMouseDown={onMouseDown}
+            ref={imgRef}
+            className={`${prefixCls}-img`}
+            src={src}
+            alt={alt}
+            style={{
+              transform: `scale3d(${scale}, ${scale}, 1) rotate(${rotate}deg)`,
+            }}
+          />
+        )}
       </div>
       {showLeftOrRightSwitches && (
         <div
@@ -290,13 +345,15 @@ const Preview: React.FC<PreviewProps> = props => {
       {showLeftOrRightSwitches && (
         <div
           className={classnames(`${prefixCls}-switch-right`, {
-            [`${prefixCls}-switch-right-disabled`]: currentPreviewIndex === previewGroupCount - 1,
+            [`${prefixCls}-switch-right-disabled`]:
+              currentPreviewIndex === previewGroupCount - 1,
           })}
           onClick={onSwitchRight}
         >
           {right}
         </div>
       )}
+      {shoDesc && descComponent}
     </Dialog>
   );
 };

@@ -1,6 +1,6 @@
 {
-  "name": "rc-image",
-  "version": "5.2.5",
+  "name": "amp-image",
+  "version": "1.0.0",
   "description": "React easy to use image component",
   "keywords": [
     "react",
@@ -65,8 +65,8 @@
     "glob": "^7.1.6",
     "less": "^3.12.2",
     "np": "^7.0.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
     "typescript": "^4.1.3"
   }
 }

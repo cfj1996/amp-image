@@ -1,4 +1,4 @@
-# rc-image
+# amp-image
 
 React Image.
 

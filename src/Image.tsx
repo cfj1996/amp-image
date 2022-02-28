@@ -1,17 +1,24 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import cn from 'classnames';
 import { getOffset } from 'rc-util/lib/Dom/css';
 import useMergedState from 'rc-util/lib/hooks/useMergedState';
-import { GetContainer } from 'rc-util/lib/PortalWrapper';
-import Preview, { PreviewProps } from './Preview';
+import type { GetContainer } from 'rc-util/lib/PortalWrapper';
+import type { PreviewProps } from './Preview';
+import Preview from './Preview';
 import PreviewGroup, { context } from './PreviewGroup';
-import { IDialogPropTypes } from 'rc-dialog/lib/IDialogPropTypes';
+import type { IDialogPropTypes } from 'rc-dialog/lib/IDialogPropTypes';
 
 export interface ImagePreviewType
   extends Omit<
     IDialogPropTypes,
-    'mask' | 'visible' | 'closable' | 'prefixCls' | 'onClose' | 'afterClose' | 'wrapClassName'
+    | 'mask'
+    | 'visible'
+    | 'closable'
+    | 'prefixCls'
+    | 'onClose'
+    | 'afterClose'
+    | 'wrapClassName'
   > {
   src?: string;
   visible?: boolean;
@@ -19,15 +26,27 @@ export interface ImagePreviewType
   getContainer?: GetContainer | false;
   mask?: React.ReactNode;
   maskClassName?: string;
+  loading?: boolean;
+  loadingComponent?: React.ReactNode;
+  getPreviewUrl?: (params?: any) => Promise<string>;
+  params?: any;
+  onSuccess?: (previewUrl: string) => void;
+  onError?: (error: any, reload?: () => void) => void;
+  error?: any;
+  descComponent?: React.ReactNode;
   icons?: PreviewProps['icons'];
 }
 
 let uuid = 0;
 
 export interface ImageProps
-  extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'placeholder' | 'onClick'> {
+  extends Omit<
+    React.ImgHTMLAttributes<HTMLImageElement>,
+    'placeholder' | 'onClick'
+  > {
   // Original
   src?: string;
+  isHide?: boolean;
   wrapperClassName?: string;
   wrapperStyle?: React.CSSProperties;
   prefixCls?: string;
@@ -53,7 +72,7 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
   src: imgSrc,
   alt,
   onPreviewClose: onInitialPreviewClose,
-  prefixCls = 'rc-image',
+  prefixCls = 'amp-image',
   previewPrefixCls = `${prefixCls}-preview`,
   placeholder,
   fallback,
@@ -75,6 +94,7 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
   sizes,
   srcSet,
   useMap,
+  isHide,
   ...otherProps
 }) => {
   const isCustomPlaceholder = placeholder && placeholder !== true;
@@ -86,16 +106,27 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
     mask: previewMask,
     maskClassName,
     icons,
+    descComponent,
+    loadingComponent,
+    params,
+    getPreviewUrl,
+    onError: previewOnError,
+    onSuccess: previewOnSuccess,
     ...dialogProps
   }: ImagePreviewType = typeof preview === 'object' ? preview : {};
-  const src = previewSrc ?? imgSrc;
+  const src = getPreviewUrl ? previewSrc : imgSrc;
   const isControlled = previewVisible !== undefined;
   const [isShowPreview, setShowPreview] = useMergedState(!!previewVisible, {
     value: previewVisible,
     onChange: onPreviewVisibleChange,
   });
-  const [status, setStatus] = useState<ImageStatus>(isCustomPlaceholder ? 'loading' : 'normal');
-  const [mousePosition, setMousePosition] = useState<null | { x: number; y: number }>(null);
+  const [status, setStatus] = useState<ImageStatus>(
+    isCustomPlaceholder ? 'loading' : 'normal',
+  );
+  const [mousePosition, setMousePosition] = useState<null | {
+    x: number;
+    y: number;
+  }>(null);
   const isError = status === 'error';
   const {
     isPreviewGroup,
@@ -108,6 +139,12 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
     uuid += 1;
     return uuid;
   });
+  const [srcState, setSrcState] = useState(src);
+  const [imgLoading, setImgLoading] = useState(false);
+
+  useEffect(() => {
+    setSrcState(getPreviewUrl ? previewSrc : imgSrc);
+  }, [previewSrc, imgSrc]);
   const canPreview = preview && !isError;
 
   const isLoaded = React.useRef(false);
@@ -144,6 +181,19 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
     if (isPreviewGroup) {
       setGroupShowPreview(true);
     } else {
+      if (!srcState && !imgLoading && getPreviewUrl) {
+        setImgLoading(true);
+        getPreviewUrl(params)
+          .then(res => {
+            previewOnSuccess?.(res);
+            setSrcState(res);
+            setImgLoading(false);
+          })
+          .catch(err => {
+            setImgLoading(false);
+            previewOnError(err, () => getPreviewUrl(params));
+          });
+      }
       setShowPreview(true);
     }
 
@@ -171,13 +221,31 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
   // Resolve https://github.com/ant-design/ant-design/issues/28881
   // Only need unRegister when component unMount
   React.useEffect(() => {
-    const unRegister = registerImage(currentId, src);
+    const unRegister = registerImage(currentId, {
+      url: src,
+      getPreviewUrl,
+      params,
+      loadingComponent,
+      canPreview,
+      onError: previewOnError,
+      onSuccess: previewOnSuccess,
+      descComponent,
+    });
 
     return unRegister;
   }, []);
 
   React.useEffect(() => {
-    registerImage(currentId, src, canPreview);
+    registerImage(currentId, {
+      url: src,
+      getPreviewUrl,
+      params,
+      loadingComponent,
+      canPreview,
+      onError: previewOnError,
+      onSuccess: previewOnSuccess,
+      descComponent,
+    });
   }, [src, canPreview]);
   // Keep order end
 
@@ -194,7 +262,6 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
     [`${prefixCls}-error`]: isError,
   });
 
-  const mergedSrc = isError && fallback ? fallback : src;
   const imgCommonProps = {
     crossOrigin,
     decoding,
@@ -216,7 +283,9 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
       ...style,
     },
   };
-
+  if (isHide) {
+    return null;
+  }
   return (
     <>
       <div
@@ -247,7 +316,9 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
 
         {/* Preview Click Mask */}
         {previewMask && canPreview && (
-          <div className={cn(`${prefixCls}-mask`, maskClassName)}>{previewMask}</div>
+          <div className={cn(`${prefixCls}-mask`, maskClassName)}>
+            {previewMask}
+          </div>
         )}
       </div>
       {!isPreviewGroup && canPreview && (
@@ -257,9 +328,12 @@ const ImageInternal: CompoundedComponent<ImageProps> = ({
           prefixCls={previewPrefixCls}
           onClose={onPreviewClose}
           mousePosition={mousePosition}
-          src={mergedSrc}
+          src={srcState}
           alt={alt}
+          descComponent={descComponent}
           getContainer={getPreviewContainer}
+          loading={imgLoading}
+          loadingComponent={loadingComponent}
           icons={icons}
           {...dialogProps}
         />
